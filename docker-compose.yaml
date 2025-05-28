@@ -1,0 +1,252 @@
+version: '3'
+services:
+  # Elasticsearch service
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  # Kibana service for visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.3
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+
+  # Elastic APM Server
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.11.3
+    container_name: apm-server
+    ports:
+      - "8200:8200"
+    command: >
+      apm-server -e
+        -E apm-server.rum.enabled=true
+        -E apm-server.rum.event_rate.limit=300
+        -E apm-server.rum.event_rate.lru_size=1000
+        -E apm-server.rum.allow_origins=['*']
+        -E apm-server.rum.library_pattern=node_modules|bower_components|~
+        -E apm-server.rum.exclude_from_grouping=node_modules|bower_components|^/webpack
+        -E apm-server.rum.source_mapping.enabled=true
+        -E apm-server.rum.source_mapping.elasticsearch.indices=[apm-*-sourcemap*]
+        -E apm-server.host=0.0.0.0:8200
+        -E output.elasticsearch.hosts=["elasticsearch:9200"]
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+
+  # Prometheus for metrics storage
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - otel-collector
+    networks:
+      - elastic
+      
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3005:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - elastic
+
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.92.0
+    container_name: otel-collector
+    restart: always
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # Health check extension
+      - "55678:55678" # OpenCensus receiver
+      - "55679:55679" # zpages extension
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+
+  # Banking Services
+  # Customer API (Cloud Environment)
+  customer-api:
+    image: node:20
+    container_name: customer-api
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: bash -c "cd /app && npm install && node customer-api/server.js"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - otel-collector
+      - apm-server
+    networks:
+      - elastic
+    environment:
+      - NODE_ENV=development
+
+  # Customer Service (Cloud Environment)
+  customer-service:
+    image: node:20
+    container_name: customer-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: bash -c "cd /app && npm install && node customer-service/server.js"
+    ports:
+      - "3003:3003"
+    depends_on:
+      - otel-collector
+      - apm-server
+    networks:
+      - elastic
+    environment:
+      - NODE_ENV=development
+      - ACCOUNT_SERVICE_URL=http://account-service:3002
+
+  # Account Service (Hybrid Environment)
+  account-service:
+    image: node:20
+    container_name: account-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: bash -c "cd /app && npm install && node account-service/server.js"
+    ports:
+      - "3002:3002"
+    depends_on:
+      - otel-collector
+      - apm-server
+      - customer-service
+    networks:
+      - elastic
+    environment:
+      - NODE_ENV=development
+      - CUSTOMER_SERVICE_URL=http://customer-service:3003
+
+  # Transaction Service (On-Premises Environment)
+  transaction-service:
+    image: node:20
+    container_name: transaction-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: bash -c "cd /app && npm install && node transaction-service/server.js"
+    ports:
+      - "3004:3004"
+    depends_on:
+      - otel-collector
+      - apm-server
+      - account-service
+    networks:
+      - elastic
+    environment:
+      - NODE_ENV=development
+      - ACCOUNT_SERVICE_URL=http://account-service:3002
+      
+  # Load-tester service
+  load-tester:
+    image: node:20
+    container_name: load-tester
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: bash -c "npm install && node load-tester.js"
+    depends_on:
+      - customer-api
+      - customer-service
+      - account-service
+      - transaction-service
+    networks:
+      - elastic
+    environment:
+      - CUSTOMER_API_URL=http://customer-api:3000
+      - ACCOUNT_SERVICE_URL=http://account-service:3002
+      - TRANSACTION_SERVICE_URL=http://transaction-service:3004
+    # Start this manually when needed:
+    # docker-compose up load-tester
+    profiles:
+      - tools
+
+  # Loki for log storage
+  loki:
+    image: grafana/loki:3.4.3
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - elastic
+
+  # Tempo for trace storage
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: ["-config.file=/etc/tempo/tempo-config.yaml"]
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo/tempo-config.yaml
+    ports:
+      - "3200:3200"  # tempo
+    networks:
+      - elastic
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  loki-data:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge 

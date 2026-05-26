@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI Incident Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav>
+<h1>AI Monitoring Dashboard</h1>
+
+<div class="menu">
+<button onclick="showSection('home')">Home</button>
+<button onclick="showSection('grafana')">Grafana</button>
+<button onclick="showSection('incidents')">Incidents</button>
+</div>
+</nav>
+
+<section id="home">
+
+<div class="cards">
+
+<div class="card">
+  <h3>Total Services</h3>
+  <p id="services-count">0</p>
+</div>
+
+<div class="card">
+  <h3>Active Alerts</h3>
+  <p id="alerts-count">0</p>
+</div>
+
+<div class="card">
+  <h3>Critical</h3>
+  <p id="critical-count">0</p>
+</div>
+
+<div class="card">
+  <h3>Status</h3>
+  <p id="system-status">Loading...</p>
+</div>
+
+</div>
+
+<div class="charts">
+
+<div class="chart-card">
+<h3>API Health Overview</h3>
+
+<div class="bar-container">
+
+<div class="bar up-bar" id="up-bar">
+<span id="up-count">0</span>
+</div>
+
+<div class="bar down-bar" id="down-bar">
+<span id="down-count">0</span>
+</div>
+
+</div>
+
+<div class="chart-labels">
+<span>Healthy APIs</span>
+<span>Failed APIs</span>
+</div>
+
+</div>
+
+
+<div class="chart-card">
+<h3>Incident Severity Distribution</h3>
+
+<div class="severity-stats">
+
+<div class="severity-item critical-box">
+Critical:
+<span id="critical-total">0</span>
+</div>
+
+<div class="severity-item high-box">
+High:
+<span id="high-total">0</span>
+</div>
+
+<div class="severity-item moderate-box">
+Moderate:
+<span id="moderate-total">0</span>
+</div>
+
+<div class="severity-item low-box">
+Low:
+<span id="low-total">0</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section id="grafana" class="hidden">
+<iframe
+  src="http://localhost:3005/d/anomaly-detection/banking-api-anomaly-detection?orgId=1&from=now-15m&to=now&timezone=browser&refresh=5s"
+  width="100%"
+  height="800"
+  frameborder="0">
+</iframe>
+</section>
+
+<section id="incidents" class="hidden">
+
+<h2>Live Incidents</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Service</th>
+<th>Issue</th>
+<th>Priority</th>
+<th>RCA Report</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="incident-table"></tbody>
+</table>
+
+</section>
+
+<!-- <section id="rca" class="hidden">
+
+<h2>Root Cause Analysis</h2>
+
+<div class="rca-box">
+
+<h3>Likely Cause:</h3>
+<p>Database connection pool exhaustion</p>
+
+<h3>Suggested Fixes:</h3>
+
+<ul>
+<li><button class="critical">High</button> Increase DB Pool</li>
+<li><button class="high">High</button> Scale Replicas</li>
+<li><button class="moderate">Moderate</button> Restart Cache</li>
+<li><button class="low">Low</button> Check Logs</li>
+<li><button class="low">Low</button> Review Queries</li>
+</ul>
+
+</div>
+
+<div class="rca-box">
+<pre id="rca-content">
+Waiting for incidents...
+</pre>
+</div>
+
+</section> -->
+
+<script src="app.js"></script>
+</body>
+</html>

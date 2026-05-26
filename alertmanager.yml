@@ -1,0 +1,8 @@
+route:
+  receiver: "rca-webhook"
+
+receivers:
+  - name: "rca-webhook"
+    webhook_configs:
+      - url: "http://rca-service:4000/alert"
+        send_resolved: true

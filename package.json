@@ -26,6 +26,7 @@
     "api-monitoring": "file:",
     "axios": "^1.8.4",
     "express": "^5.1.0",
+    "marked": "^18.0.0",
     "winston": "^3.17.0"
   }
 }

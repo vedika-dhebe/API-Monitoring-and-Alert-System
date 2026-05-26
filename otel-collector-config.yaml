@@ -29,25 +29,25 @@ processors:
 
 exporters:
   # Simplified Elasticsearch exporter configuration for traces
-  elasticsearch/traces:
-    endpoints:
-      - "http://elasticsearch:9200"
-    traces_index: "traces-bank"
-    # Set very conservative timeout values
-    timeout: 120s
-    tls:
-      insecure: true
+  # elasticsearch/traces:
+  #   endpoints:
+  #     - "http://elasticsearch:9200"
+  #   traces_index: "traces-bank"
+  #   # Set very conservative timeout values
+  #   timeout: 120s
+  #   tls:
+  #     insecure: true
   
-  # Simplified Elasticsearch exporter configuration for logs
-  elasticsearch/logs:
-    endpoints:
-      - "http://elasticsearch:9200"
-    logs_index: "banking-logs"
-    # Set very conservative timeout values
-    timeout: 120s
-    tls:
-      insecure: true
-    # Remove the problematic mapping section
+  # # Simplified Elasticsearch exporter configuration for logs
+  # elasticsearch/logs:
+  #   endpoints:
+  #     - "http://elasticsearch:9200"
+  #   logs_index: "banking-logs"
+  #   # Set very conservative timeout values
+  #   timeout: 120s
+  #   tls:
+  #     insecure: true
+  #   # Remove the problematic mapping section
   
   # Prometheus exporter for metrics - enhanced for anomaly detection
   prometheus:
@@ -72,17 +72,16 @@ exporters:
       insecure: true
   
   # Debug exporter with more verbose options
-  logging:
-    verbosity: detailed
-    sampling_initial: 1
-    sampling_thereafter: 1
+  # logging:
+  #   verbosity: detailed
+  #   sampling_initial: 1
+  #   sampling_thereafter: 1
 
 service:
   # Enable telemetry collection for the collector itself
   telemetry:
     logs:
-      level: debug
-      development: true
+      level: info
       encoding: console
     metrics:
       level: detailed
@@ -92,12 +91,14 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch, resource]
-      exporters: [elasticsearch/traces, otlp/tempo, logging]
+      exporters: [otlp/tempo]
+
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, batch, resource]
-      exporters: [prometheus, logging]
+      exporters: [prometheus]
+
     logs:
       receivers: [otlp]
       processors: [memory_limiter, batch, resource]
-      exporters: [elasticsearch/logs, loki, logging] 
+      exporters: [loki]

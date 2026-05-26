@@ -193,6 +193,9 @@ app.post('/api/transactions', async (req, res) => {
     
     // Start a timer to measure processing time for metrics
     const processingStartTime = Date.now();
+
+    // Simulate artificial latency
+    await new Promise(r => setTimeout(r, 1500));
     
     // Process transaction based on type
     let transaction;

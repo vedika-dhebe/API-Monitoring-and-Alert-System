@@ -8,7 +8,6 @@ from prophet import Prophet
 # CONFIG
 # ==============================
 PROMETHEUS = "http://prometheus:9090"   # inside docker
-# SLACK_WEBHOOK = 
 
 # SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK_URL")
 SLEEP_INTERVAL = 600   # 2 hours
@@ -217,11 +216,11 @@ def run():
         pred_traffic = forecast(traffic_df)
 
         print(f"""
-DEBUG {service}:
-Latency: {pred_latency}
-Error: {pred_error}
-Traffic: {pred_traffic}
-""")
+            DEBUG {service}:
+            Latency: {pred_latency}
+            Error: {pred_error}
+            Traffic: {pred_traffic}
+            """)
 
         #FORCE ALERT (no condition)
         send_alert({

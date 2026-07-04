@@ -30,7 +30,7 @@ groups:
         expr: |
           sum by (exported_job)(
             rate(bank_http_client_duration_milliseconds_count{http_status_code=~"5.."}[5m])
-          ) > 0
+          ) > 0.2
         for: 1m
         labels:
           severity: critical
@@ -42,7 +42,7 @@ groups:
         expr: |
           sum by (exported_job)(
             rate(bank_http_client_duration_milliseconds_count{http_status_code=~"4.."}[5m])
-          ) > 0
+          ) > 0.2
         for: 1m
         labels:
           severity: critical

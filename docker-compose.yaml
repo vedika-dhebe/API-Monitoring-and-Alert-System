@@ -117,6 +117,7 @@ services:
     environment:
       - NODE_ENV=development
       - CUSTOMER_SERVICE_URL=http://customer-service:3003
+      - LOAN_SERVICE_URL=http://loan-service:3008
 
   # Transaction Service (On-Premises Environment)
   transaction-service:
@@ -136,6 +137,117 @@ services:
     environment:
       - NODE_ENV=development
       - ACCOUNT_SERVICE_URL=http://account-service:3002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3006
+      - AUDIT_SERVICE_URL=http://audit-service:3009
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3010
+    
+  notification-service:
+    image: node:20
+    container_name: notification-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: >
+      bash -c "cd /app &&
+      npm install &&
+      node notification-service/server.js"
+    ports:
+      - "3006:3006"
+    depends_on:
+      - otel-collector
+    networks:
+      - elastic
+  
+  fraud-service:
+    image: node:20
+    container_name: fraud-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: >
+      bash -c "cd /app &&
+      npm install &&
+      node fraud-service/server.js"
+    ports:
+      - "3007:3007"
+    depends_on:
+      - otel-collector
+    networks:
+      - elastic
+  
+  loan-service:
+    image: node:20
+    container_name: loan-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: >
+      bash -c "cd /app &&
+      npm install &&
+      node loan-service/server.js"
+    ports:
+      - "3008:3008"
+    depends_on:
+      - otel-collector
+      - fraud-service
+    environment:
+      - FRAUD_SERVICE_URL=http://fraud-service:3007
+    networks:
+      - elastic
+  
+  audit-service:
+    image: node:20
+    container_name: audit-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: >
+      bash -c "cd /app &&
+      npm install &&
+      node audit-service/server.js"
+    ports:
+      - "3009:3009"
+    depends_on:
+      - otel-collector
+    networks:
+      - elastic
+    
+  analytics-service:
+    image: node:20
+    container_name: analytics-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: >
+      bash -c "cd /app &&
+      npm install &&
+      node analytics-service/server.js"
+    ports:
+      - "3010:3010"
+    depends_on:
+      - otel-collector
+    networks:
+      - elastic
+  
+  report-service:
+    image: node:20
+    container_name: report-service
+    working_dir: /app
+    volumes:
+      - ./banking-services:/app
+    command: >
+      bash -c "cd /app &&
+      npm install &&
+      node report-service/server.js"
+    ports:
+      - "3011:3011"
+    depends_on:
+      - analytics-service
+      - otel-collector
+    environment:
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3010
+    networks:
+      - elastic
       
   # Load-tester service
   load-tester:

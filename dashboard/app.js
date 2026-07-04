@@ -29,66 +29,87 @@ async function loadIncidents() {
   }
 }
 
-function updateHomeStats(incidents) {
+function updateHomeStats(incidents){
 
-  const totalServices = 4;
+const services=[
+"customer-api-service",
+"customer-service",
+"account-service",
+"transaction-service",
+"notification-service",
+"fraud-service",
+"loan-service",
+"audit-service",
+"analytics-service",
+"report-service"
+];
 
-  const activeAlerts = incidents.length;
+const totalServices=services.length;
 
-  const critical = incidents.filter(
-    i => i.severity === "Critical"
-  ).length;
+const activeAlerts=incidents.length;
 
-  document.getElementById("services-count").innerText =
-    totalServices;
+const criticalCount=
+incidents.filter(i=>i.severity==="Critical").length;
 
-  document.getElementById("alerts-count").innerText =
-    activeAlerts;
+const highCount=
+incidents.filter(i=>i.severity==="High").length;
 
-  document.getElementById("critical-count").innerText =
-    critical;
+const moderateCount=
+incidents.filter(i=>i.severity==="Moderate").length;
 
-  document.getElementById("system-status").innerText =
-    activeAlerts > 0 ? "Warning" : "Healthy";
+const lowCount=
+incidents.filter(i=>i.severity==="Low").length;
 
-  const criticalCount = incidents.filter(
-  i => i.severity === "Critical"
-).length;
+const failedServices=
+[
+...new Set(
+incidents.map(i=>i.service)
+)
+].filter(s=>services.includes(s)).length;
 
-const highCount = incidents.filter(
-  i => i.severity === "High"
-).length;
+const healthyApis=
+Math.max(0,totalServices-failedServices);
 
-const moderateCount = incidents.filter(
-  i => i.severity === "Moderate"
-).length;
+document.getElementById("services-count").innerText=
+totalServices;
 
-const lowCount = incidents.filter(
-  i => i.severity === "Low"
-).length;
+document.getElementById("alerts-count").innerText=
+activeAlerts;
 
-const failedApis = incidents.length;
-const healthyApis = totalServices - failedApis;
+document.getElementById("critical-count").innerText=
+criticalCount;
 
-document.getElementById("up-count").innerText =
-  healthyApis;
+document.getElementById("system-status").innerText=
+failedServices>0?"Warning":"Healthy";
 
-document.getElementById("down-count").innerText =
-  failedApis;
+document.getElementById("up-count").innerText=
+healthyApis;
 
-document.getElementById("critical-total").innerText =
-  criticalCount;
+document.getElementById("down-count").innerText=
+failedServices;
 
-document.getElementById("high-total").innerText =
-  highCount;
+document.getElementById("critical-total").innerText=
+criticalCount;
 
-document.getElementById("moderate-total").innerText =
-  moderateCount;
+document.getElementById("high-total").innerText=
+highCount;
 
-document.getElementById("low-total").innerText =
-  lowCount;
+document.getElementById("moderate-total").innerText=
+moderateCount;
+
+document.getElementById("low-total").innerText=
+lowCount;
+
+const upHeight=(healthyApis/totalServices)*200;
+const downHeight=(failedServices/totalServices)*200;
+
+document.getElementById("up-bar").style.height=
+`${Math.max(upHeight,20)}px`;
+
+document.getElementById("down-bar").style.height=
+`${Math.max(downHeight,20)}px`;
+
 }
-
 function updateIncidentTable(incidents) {
 
   const table = document.getElementById("incident-table");
@@ -121,15 +142,35 @@ function updateIncidentTable(incidents) {
         </td>
 
         <td>
-          <span class="badge moderate">
+          <button
+          class="status-btn active"
+          onclick="toggleStatus(this)">
             Active
-          </span>
+          </button>
         </td>
       </tr>
     `;
 
     table.innerHTML += row;
   });
+}
+
+function toggleStatus(button){
+
+    if(button.innerText==="Active"){
+
+        button.innerText="Resolved";
+        button.classList.remove("active");
+        button.classList.add("resolved");
+
+    }else{
+
+        button.innerText="Active";
+        button.classList.remove("resolved");
+        button.classList.add("active");
+
+    }
+
 }
 
 setInterval(loadIncidents, 5000);

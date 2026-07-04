@@ -183,23 +183,25 @@ Recent Traces:
 ${JSON.stringify(traces, null, 2)}
 
 Tasks:
-1. Explain what happened
-2. Identify MOST LIKELY root cause
-3. Explain why it happened
-4. Give TOP 5 fixes
-5. Rank fixes as:
+1. Write the problem name (It should be short not long explaination, just a name.).
+2. Explain what happened
+3. Identify MOST LIKELY root cause
+4. Explain why it happened
+5. Give TOP 5 fixes: (Rank fixes as:
    - Critical
    - High
    - Moderate
-   - Low
+   - Low)
 6. Give confidence %
+7. Write a short summary in bullet point wise manner so engineer can just read it if there's no time to read huge explaination above.
 
 Rules:
 - Use traces + metrics + logs together
 - Avoid generic answers
 - Prioritize realistic infrastructure causes
-- Keep concise
+- Keep concise 
 - Do not ask for more data
+- Do not say any thing else less or more other than the mentioned tasks. Not even a single word extra, like not inven intro or outro.
 - remember this has no separate database it purely runs on local storage but that should not be mentioned in message but also should be considered while generating the analysis.
 
 `

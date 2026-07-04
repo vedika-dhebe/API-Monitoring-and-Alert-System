@@ -15,6 +15,9 @@ const { createTelemetryMiddleware } = require('../middleware/telemetry-middlewar
 const PORT = 3004;
 const app = express();
 const ACCOUNT_SERVICE_URL = process.env.ACCOUNT_SERVICE_URL || 'http://localhost:3002';
+const NOTIFICATION_URL = process.env.NOTIFICATION_SERVICE_URL;
+const AUDIT_URL = process.env.AUDIT_SERVICE_URL;
+const ANALYTICS_URL = process.env.ANALYTICS_SERVICE_URL;
 
 // Store environment and service name for context
 app.set('environment', 'on-premises');
@@ -297,6 +300,19 @@ app.post('/api/transactions', async (req, res) => {
       message: 'Transaction completed successfully',
       transaction
     });
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+  //   await axios.post(
+  // `${NOTIFICATION_URL}/send-email`,
+  // {
+  //   customerId: req.body.customerId,
+  //   message: "Transaction successful"
+  // }
+// );
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
   } catch (error) {
     logger.error('Transaction processing failed', { 
       error: error.message, 

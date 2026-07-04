@@ -14,6 +14,12 @@ const { createTelemetryMiddleware } = require('../middleware/telemetry-middlewar
 // Constants
 const PORT = 3000;
 const app = express();
+const LOAN_SERVICE_URL = "http://loan-service:3008";
+const FRAUD_SERVICE_URL = "http://fraud-service:3007";
+const NOTIFICATION_SERVICE_URL = "http://notification-service:3006";
+const AUDIT_SERVICE_URL = "http://audit-service:3009";
+const ANALYTICS_SERVICE_URL = "http://analytics-service:3010";
+const REPORT_SERVICE_URL = "http://report-service:3011";
 
 // Store environment and service name for context
 app.set('environment', 'cloud');
@@ -335,6 +341,152 @@ app.post('/api/accounts/:accountNumber/transfer', async (req, res) => {
     
     res.status(500).json({ error: 'Failed to process transfer' });
   }
+});
+
+app.post("/api/test-loan", async (req, res) => {
+
+  try {
+
+    const result = await axios.post(
+      `${LOAN_SERVICE_URL}/apply`,
+      req.body
+    );
+
+    res.json(result.data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: "Loan service unavailable"
+    });
+
+  }
+
+});
+
+app.post("/api/test-fraud", async (req, res) => {
+
+  try {
+
+    const result = await axios.post(
+      `${FRAUD_SERVICE_URL}/check`,
+      req.body
+    );
+
+    res.json(result.data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: "Fraud service unavailable"
+    });
+
+  }
+
+});
+
+app.post("/api/test-email", async (req, res) => {
+
+  try {
+
+    const result = await axios.post(
+      `${NOTIFICATION_SERVICE_URL}/send-email`,
+      req.body
+    );
+
+    res.json(result.data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: "Email service unavailable"
+    });
+
+  }
+
+});
+
+app.post("/api/test-sms", async (req, res) => {
+
+  try {
+
+    const result = await axios.post(
+      `${NOTIFICATION_SERVICE_URL}/send-sms`,
+      req.body
+    );
+
+    res.json(result.data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: "SMS service unavailable"
+    });
+
+  }
+
+});
+
+app.post("/api/test-audit", async (req, res) => {
+
+  try {
+
+    const result = await axios.post(
+      `${AUDIT_SERVICE_URL}/event`,
+      req.body
+    );
+
+    res.json(result.data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: "Audit service unavailable"
+    });
+
+  }
+
+});
+
+app.post("/api/test-analytics", async (req, res) => {
+
+  try {
+
+    const result = await axios.post(
+      `${ANALYTICS_SERVICE_URL}/process`,
+      req.body
+    );
+
+    res.json(result.data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: "Analytics service unavailable"
+    });
+
+  }
+
+});
+
+app.get("/api/test-report", async (req, res) => {
+
+  try {
+
+    const result = await axios.get(
+      `${REPORT_SERVICE_URL}/daily-summary`
+    );
+
+    res.json(result.data);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: "Report service unavailable"
+    });
+
+  }
+
 });
 
 // Get transaction history (forward to transaction service)
